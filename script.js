@@ -1,16 +1,19 @@
 
 const gameBoard = (function () {
-    const board = new Array(9).fill(null);
-    board[0] = 'X';
-    board[4] = 'X';
+    let board = new Array(9).fill(null);
+    let currentPlayer = "X";
     const gameBoardContainer = document.createElement("div");
     gameBoardContainer.className = "board-container";
-
+    
     const resetBoard = () => {
         console.log("hehe boaaaaa")
-        const boardSquares = document.querySelectorAll("board-square");
+        const boardSquares = document.querySelectorAll(".board-square > p");
         boardSquares.forEach(square => {
             square.textContent = "";
+        });
+        board = new Array(9).fill(null);
+        board.forEach(element => {
+            console.log(element);
         });
     };
 
@@ -18,9 +21,26 @@ const gameBoard = (function () {
         if (!gameBoardContainer.hasChildNodes()) {
             document.body.appendChild(gameBoardContainer);
             drawBoard();
+            addEventListeners();
+        } else {
+            console.log("reset board");
+            resetBoard();
         }
-        resetBoard();
     }
+
+    const addEventListeners = () => {
+        const squares = document.querySelectorAll(".board-square");
+        squares.forEach((square, index) => {
+            square.addEventListener("click", () => handleSquareClick(index));
+        });
+    };
+
+    const handleSquareClick = (index) => {
+        const moveSuccessful = makeMove(index, currentPlayer);  
+        if (moveSuccessful) {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; 
+        }
+    };
 
     const drawBoard = () => {
         for(let i = 0; i < 9; i++){
@@ -46,6 +66,10 @@ const gameBoard = (function () {
             board[index] = choice;
             drawLetter(index, choice);
             checkWin(choice);
+            return true;
+        } else {
+            console.log("Square already taken!");
+            return false;
         }
     }
 
@@ -68,19 +92,37 @@ const gameBoard = (function () {
             }
         });
     }
+    
 
     return { initBoard, makeMove, checkWin };
 })();
 
 
 function Player(name, letter) {
+    const squares = document.querySelectorAll(".board-square");
+        squares.forEach((square, index) => {
+            square.addEventListener("click", () => handleSquareClick(index));
+        });
+
+    const handleSquareClick = (index) => {
+        const moveSuccessful = makeMove(index, currentPlayer);  
+        if (moveSuccessful) {
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; 
+        }
+    };
+
     return {name, letter};
 };
 
+const initGameButton = document.querySelector(".newgame-btn");
+initGameButton.addEventListener("click", () => {
+    gameBoard.initBoard();
+    const pXName = document.getElementById("playerX_name");
+    const pYName = document.getElementById("playerY_name")
+    const playerX = Player(pXName.textContent, 'X');
+    const playerO = Player(pYName.textContent, 'O');
+})
 
-const playerX = Player('pancho', 'X');
-const playerY = Player('pepe', 'O');
+//gameBoard.initBoard();
 
 
-gameBoard.initBoard();
-gameBoard.makeMove(8, playerX.letter);
