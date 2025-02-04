@@ -1,7 +1,7 @@
 
 const gameBoard = (function () {
     let board = new Array(9).fill(null);
-    let currentPlayer = "X";
+
     const gameBoardContainer = document.createElement("div");
     gameBoardContainer.className = "board-container";
     
@@ -21,26 +21,11 @@ const gameBoard = (function () {
         if (!gameBoardContainer.hasChildNodes()) {
             document.body.appendChild(gameBoardContainer);
             drawBoard();
-            addEventListeners();
         } else {
             console.log("reset board");
             resetBoard();
         }
     }
-
-    const addEventListeners = () => {
-        const squares = document.querySelectorAll(".board-square");
-        squares.forEach((square, index) => {
-            square.addEventListener("click", () => handleSquareClick(index));
-        });
-    };
-
-    const handleSquareClick = (index) => {
-        const moveSuccessful = makeMove(index, currentPlayer);  
-        if (moveSuccessful) {
-            currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; 
-        }
-    };
 
     const drawBoard = () => {
         for(let i = 0; i < 9; i++){
@@ -65,10 +50,9 @@ const gameBoard = (function () {
         if (board[index] === null) {
             board[index] = choice;
             drawLetter(index, choice);
-            checkWin(choice);
+            //checkWin(choice);
             return true;
         } else {
-            console.log("Square already taken!");
             return false;
         }
     }
@@ -83,44 +67,91 @@ const gameBoard = (function () {
 
         ]
         
-        winPatterns.forEach((pattern) => {
+        return winPatterns.some((pattern) => {
             console.log(pattern);
-            //console.log(board[pattern[0]])
             if (board[pattern[0]] === player && board[pattern[1]] === player && board[pattern[2]] === player) {
-                console.log(`player ${player} wins`);
-                initBoard();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    const isDraw = () => {
+        let full = true;
+        board.forEach(element => {
+            if (element === null) {
+                full = false;
             }
         });
+
+        return full;
     }
     
 
-    return { initBoard, makeMove, checkWin };
+    return { initBoard, makeMove, checkWin, isDraw, resetBoard};
 })();
 
 
 function Player(name, letter) {
-    const squares = document.querySelectorAll(".board-square");
-        squares.forEach((square, index) => {
-            square.addEventListener("click", () => handleSquareClick(index));
-        });
-
-    const handleSquareClick = (index) => {
-        const moveSuccessful = makeMove(index, currentPlayer);  
-        if (moveSuccessful) {
-            currentPlayer = currentPlayer === 'X' ? 'O' : 'X'; 
+    const makeMove = (index) => {
+        if (gameBoard.makeMove(index, letter)) {
+            if (gameBoard.checkWin(letter)) {
+                alert(`${name} wins!`);
+                gameController.endGame();
+            } else if (gameBoard.isDraw()) {
+                alert("It's a draw!");
+                gameController.endGame();
+            } else {
+                gameController.switchPlayer();
+            }
+        } else {
+            console.log("Square already taken!");
         }
+    }
+ 
+    return {name, letter, makeMove};
+};
+
+const gameController = (function () {
+    let playerX, playerO, currentPlayer;
+
+    const startGame = () => {
+        const pXName = document.getElementById("playerX_name").textContent || "Player X";
+        const pOName = document.getElementById("playerY_name").textContent || "Player O";
+
+        playerX = Player(pXName, 'X');
+        playerO = Player(pOName, 'O');
+        currentPlayer = playerX;
+
+        gameBoard.initBoard();
+        addEventListeners();
     };
 
-    return {name, letter};
-};
+    const addEventListeners = () => {
+        const squares = document.querySelectorAll(".board-square");
+        squares.forEach((square, index) => {
+            square.addEventListener("click", () => currentPlayer.makeMove(index));
+        });
+    };
+
+    const switchPlayer = () => {
+        currentPlayer = currentPlayer === playerX ? playerO : playerX;
+    };
+
+    const endGame = () => {
+        setTimeout(() => {
+            alert("Restarting game...");
+            gameBoard.resetBoard();
+        }, 1000);
+    };
+
+    return { startGame, switchPlayer, endGame };
+})();
+
 
 const initGameButton = document.querySelector(".newgame-btn");
 initGameButton.addEventListener("click", () => {
-    gameBoard.initBoard();
-    const pXName = document.getElementById("playerX_name");
-    const pYName = document.getElementById("playerY_name")
-    const playerX = Player(pXName.textContent, 'X');
-    const playerO = Player(pYName.textContent, 'O');
+    gameController.startGame();
 })
 
 //gameBoard.initBoard();
