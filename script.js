@@ -2,8 +2,7 @@
 const gameBoard = (function () {
     let board = new Array(9).fill(null);
 
-    const gameBoardContainer = document.createElement("div");
-    gameBoardContainer.className = "board-container";
+    const gameBoardContainer = document.querySelector(".board-container")
     
     const resetBoard = () => {
         console.log("hehe boaaaaa")
@@ -19,10 +18,9 @@ const gameBoard = (function () {
 
     const initBoard = () => {
         if (!gameBoardContainer.hasChildNodes()) {
-            document.body.appendChild(gameBoardContainer);
             drawBoard();
+            gameController.addEventListeners();
         } else {
-            console.log("reset board");
             resetBoard();
         }
     }
@@ -96,16 +94,17 @@ function Player(name, letter) {
     const makeMove = (index) => {
         if (gameBoard.makeMove(index, letter)) {
             if (gameBoard.checkWin(letter)) {
-                alert(`${name} wins!`);
+                gameController.announcer("win");
                 gameController.endGame();
             } else if (gameBoard.isDraw()) {
-                alert("It's a draw!");
+                gameController.announcer("draw");
                 gameController.endGame();
             } else {
                 gameController.switchPlayer();
             }
         } else {
             console.log("Square already taken!");
+            gameController.announcer("squareTaken");
         }
     }
  
@@ -114,17 +113,20 @@ function Player(name, letter) {
 
 const gameController = (function () {
     let playerX, playerO, currentPlayer;
+    let annoucerMessage = document.querySelector(".player-turn-text");
 
     const startGame = () => {
-        const pXName = document.getElementById("playerX_name").textContent || "Player X";
-        const pOName = document.getElementById("playerY_name").textContent || "Player O";
+        const pXName = document.getElementById("playerX_name").value || "Player X";
+        const pOName = document.getElementById("playerY_name").value || "Player O";
+        
 
         playerX = Player(pXName, 'X');
         playerO = Player(pOName, 'O');
         currentPlayer = playerX;
 
+        announcer("turnInfo");
+
         gameBoard.initBoard();
-        addEventListeners();
     };
 
     const addEventListeners = () => {
@@ -136,24 +138,45 @@ const gameController = (function () {
 
     const switchPlayer = () => {
         currentPlayer = currentPlayer === playerX ? playerO : playerX;
+        announcer("turnInfo");
     };
 
     const endGame = () => {
-        setTimeout(() => {
+        /*setTimeout(() => {
             alert("Restarting game...");
             gameBoard.resetBoard();
-        }, 1000);
+        }, 1000);*/
+        initGameButton.removeAttribute("disabled");
     };
 
-    return { startGame, switchPlayer, endGame };
+    const announcer = (type) => {
+        switch (type) {
+            case "turnInfo":
+                annoucerMessage.textContent = `Its ${currentPlayer.name} turn!`;
+                break;
+            case "squareTaken":
+                annoucerMessage.textContent = "Square already taken!";
+                break;
+            case "win":
+                annoucerMessage.textContent = `${currentPlayer.name} wins!`;
+                break;
+            case "draw":
+                annoucerMessage.textContent = "It's a draw!";
+                break;
+            default:
+                break;
+        }
+    }
+
+    return { startGame, switchPlayer, endGame, announcer, addEventListeners};
 })();
 
 
 const initGameButton = document.querySelector(".newgame-btn");
 initGameButton.addEventListener("click", () => {
     gameController.startGame();
+    initGameButton.setAttribute("disabled", "true");
 })
-
 //gameBoard.initBoard();
 
 
